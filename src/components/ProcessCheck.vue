@@ -188,6 +188,10 @@
                 <input type="text" v-model="item.operator" placeholder="请输入">
               </div>
               <div class="detail-row">
+                <label>标准要求：</label>
+                <input type="text" v-model="item.standardReq" placeholder="请输入">
+              </div>
+              <div class="detail-row">
                 <label>工艺标准Ⅰ：</label>
                 <input type="text" v-model="item.standard1" placeholder="请输入">
               </div>
@@ -546,6 +550,7 @@ export default {
         const gybzData = await processApi.getGybz(item.id, item.productModel)
         if (gybzData) {
           item.operator = gybzData.V3 || ''
+          item.standardReq = gybzData.V4 || ''
           item.standard1 = gybzData.V5 || ''
           item.standard2 = gybzData.V7 || ''
           item.standard3 = gybzData.V9 || ''
@@ -555,6 +560,7 @@ export default {
           item.judgment = gybzData.V17 || ''
         } else {
           item.operator = ''
+          item.standardReq = ''
           item.standard1 = ''
           item.standard2 = ''
           item.standard3 = ''
@@ -681,7 +687,8 @@ export default {
           jcs: item.checkCount,
           bls: item.defectCount,
           clyj: item.suggestion,
-          pd: item.judgment
+          pd: item.judgment,
+          bzyq: item.standardReq
         })
 
         item.submitted = true
@@ -711,6 +718,7 @@ export default {
           checkTime: this.getCurrentTime(),
           productModel: '',
           operator: '',
+          standardReq: '',
           standard1: '',
           standard2: '',
           standard3: '',

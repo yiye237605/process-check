@@ -109,7 +109,8 @@ export const inspectionApi = {
     jcs,
     bls,
     clyj,
-    pd
+    pd,
+    bzyq
   }) => {
     const result = await request('WeiXin_ZLXJ_insert', [
       { name: '@userno', value: userno },
@@ -123,7 +124,8 @@ export const inspectionApi = {
       { name: '@jcs', value: jcs },
       { name: '@bls', value: bls },
       { name: '@clyj', value: clyj },
-      { name: '@pd', value: pd }
+      { name: '@pd', value: pd },
+      { name: '@bzyq', value: bzyq }
     ])
     return result.data
   }
