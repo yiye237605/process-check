@@ -162,7 +162,26 @@
               </div>
               <div class="detail-row">
                 <label><span class="required">*</span>产品型号：</label>
-                <input type="text" v-model="item.productModel" placeholder="请输入" @blur="onProductModelBlur(item)">
+                <div class="search-select-wrapper" style="position: relative; flex: 1;">
+                  <input
+                    type="text"
+                    :value="currentProductItem?.productModel || ''"
+                    @input="onProductInput"
+                    placeholder="输入或选择产品型号"
+                    @focus="onProductFocus"
+                    @blur="onProductBlur"
+                  >
+                  <div v-if="showProductDropdown && productList.length > 0" class="search-dropdown" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: #fff; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-top: none;">
+                    <div
+                      v-for="p in productList"
+                      :key="p.V1"
+                      class="search-dropdown-item"
+                      @mousedown.prevent="selectProduct(p)"
+                    >
+                      {{ p.V1 }}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="detail-row">
                 <label>操作人：</label>
@@ -210,7 +229,7 @@
 </template>
 
 <script>
-import { categoryApi, processApi, inspectionApi } from '../api/index.js'
+import { categoryApi, processApi, inspectionApi, productApi } from '../api/index.js'
 
 export default {
   name: 'ProcessCheck',
@@ -252,7 +271,11 @@ export default {
         show: false,
         message: '',
         type: 'info'
-      }
+      },
+      productList: [],
+      showProductDropdown: false,
+      productTimer: null,
+      currentProductItem: null
     }
   },
 
@@ -332,7 +355,8 @@ export default {
         this.fetchProcessList()
       } catch (e) {
         console.error('保存失败:', e)
-        this.showToast('网络请求失败', 'error')
+        const errorMsg = e.message || '网络请求失败'
+        this.showToast(errorMsg, 'error')
       }
     },
 
@@ -388,7 +412,8 @@ export default {
         }
       } catch (e) {
         console.error('保存失败:', e)
-        this.showToast('网络请求失败', 'error')
+        const errorMsg = e.message || '网络请求失败'
+        this.showToast(errorMsg, 'error')
       }
     },
 
@@ -510,6 +535,9 @@ export default {
           await this.fetchGybz(item)
           item.gybzLoaded = true
         }
+        if (item.expanded) {
+          this.currentProductItem = item
+        }
       }
     },
 
@@ -525,10 +553,85 @@ export default {
           item.defectCount = gybzData.V13 || null
           item.suggestion = gybzData.V15 || ''
           item.judgment = gybzData.V17 || ''
+        } else {
+          item.operator = ''
+          item.standard1 = ''
+          item.standard2 = ''
+          item.standard3 = ''
+          item.checkCount = null
+          item.defectCount = null
+          item.suggestion = ''
+          item.judgment = ''
         }
       } catch (e) {
         console.error('获取工艺标准失败:', e)
       }
+    },
+
+    onProductInput(e) {
+      if (this.currentProductItem) {
+        this.currentProductItem.productModel = e.target.value
+      }
+      this.onProductSearch()
+    },
+
+    async onProductSearch() {
+      if (this.productTimer) clearTimeout(this.productTimer)
+      this.productTimer = setTimeout(async () => {
+        const model = this.currentProductItem?.productModel || ''
+        await this.fetchProductList(model)
+      }, 300)
+    },
+
+    async onProductFocus() {
+      await this.fetchProductList('')
+    },
+
+    async onProductBlur() {
+      await this.fetchGybz(this.currentProductItem)
+      setTimeout(() => {
+        this.showProductDropdown = false
+      }, 200)
+    },
+
+    clearProductFields() {
+      if (this.currentProductItem) {
+        this.currentProductItem.operator = ''
+        this.currentProductItem.standard1 = ''
+        this.currentProductItem.standard2 = ''
+        this.currentProductItem.standard3 = ''
+        this.currentProductItem.checkCount = null
+        this.currentProductItem.defectCount = null
+        this.currentProductItem.suggestion = ''
+        this.currentProductItem.judgment = ''
+      }
+    },
+
+    async fetchProductList(like) {
+      try {
+        const list = await productApi.getProductList(like)
+        this.productList = list
+        this.showProductDropdown = true
+      } catch (e) {
+        console.error('获取产品型号失败:', e)
+      }
+    },
+
+    selectProduct(p) {
+      if (this.currentProductItem) {
+        this.currentProductItem.productModel = p.V1
+        this.currentProductItem.operator = ''
+        this.currentProductItem.standard1 = ''
+        this.currentProductItem.standard2 = ''
+        this.currentProductItem.standard3 = ''
+        this.currentProductItem.checkCount = null
+        this.currentProductItem.defectCount = null
+        this.currentProductItem.suggestion = ''
+        this.currentProductItem.judgment = ''
+        this.fetchGybz(this.currentProductItem)
+      }
+      this.showProductDropdown = false
+      this.productList = []
     },
 
     async onProductModelBlur(item) {

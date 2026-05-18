@@ -19,7 +19,20 @@ const request = async (procName, params = []) => {
     throw new Error(result.message || '请求失败')
   }
 
+  if (result.data && result.data.length > 0 && result.data[0].error) {
+    throw new Error(result.data[0].error)
+  }
+
   return result
+}
+
+export const productApi = {
+  getProductList: async (like = '') => {
+    const result = await request('WeiXin_zl_cpxl_select', [
+      { name: '@like', value: like }
+    ])
+    return result.data || []
+  }
 }
 
 export const categoryApi = {
@@ -119,5 +132,6 @@ export const inspectionApi = {
 export default {
   category: categoryApi,
   process: processApi,
-  inspection: inspectionApi
+  inspection: inspectionApi,
+  product: productApi
 }
