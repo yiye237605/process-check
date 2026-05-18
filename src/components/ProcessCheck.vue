@@ -718,7 +718,7 @@ export default {
           defectCount: null,
           suggestion: '',
           judgment: '',
-          submitted: false
+          submitted: item.submitted === 1
         }))
       } catch (e) {
         console.error('请求失败:', e)
